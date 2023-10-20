@@ -4,6 +4,8 @@ import anthropic
 import huggingface_hub
 import tiktoken # Tokenizer for OpenAI GPT models
 import sentencepiece # Tokenizer for LLaMA 2 model
+import boto3
+import json
 
 MAX_TOKENS = 1000  # Max number of tokens that each model should generate
 
@@ -35,6 +37,30 @@ class Model:
         Count the number of tokens in the string
         """
         return None
+
+class Bedrock(Model):
+
+    def generate(self, system_message, new_user_message, history=[], temperature=1):
+        runtime = boto3.client(service_name="bedrock-runtime", region_name="us-west-2")
+        # print(self.escape_string(system_message))
+        message = {
+            "modelId": "anthropic.claude-v2",
+            "contentType": "application/json",
+            "accept": "*/*",
+            "body": "{\"prompt\":\"Human: " + self.escape_string(system_message) + self.escape_string(new_user_message) +"\\nAssistant:\",\"max_tokens_to_sample\":2000,\"temperature\":1,\"top_k\":250,\"top_p\":0.999,\"stop_sequences\":[\"\\n\\nHuman:\"],\"anthropic_version\":\"bedrock-2023-05-31\"}"
+            }
+        stream = runtime.invoke_model_with_response_stream(**message);
+        return stream.get('body')
+
+    def parse_completion(self, completion):
+        chunk_obj = json.loads(completion.get('chunk').get('bytes').decode())
+        return chunk_obj['completion']
+
+    def count_tokens(self, str):
+        return 10
+
+    def escape_string(self, string):
+        return string.replace('"', '\\"').replace("\n", "\\n")
 
 class OpenAIModel(Model):
     """

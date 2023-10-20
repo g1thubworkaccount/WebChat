@@ -3,16 +3,17 @@ import datetime
 import gradio as gr
 import yaml
 
-from models import OpenAIModel, AnthropicModel, HuggingFaceLlama2Model
+from models import OpenAIModel, AnthropicModel, HuggingFaceLlama2Model, Bedrock
 from tools import Tools
 
 SYSTEM_MESSAGE_TEMPLATE = "prompt.txt"
 
 MODELS = {
-    "GPT-3.5": OpenAIModel("gpt-3.5-turbo-16k", 16384),
-    "GPT-4": OpenAIModel("gpt-4", 8192),
-    "Claude 2": AnthropicModel("claude-2", 100000),
-    "Llama 2": HuggingFaceLlama2Model("meta-llama/Llama-2-70b-chat-hf", 4096),
+    # "GPT-3.5": OpenAIModel("gpt-3.5-turbo-16k", 16384),
+    # "GPT-4": OpenAIModel("gpt-4", 8192),
+    # "Claude 2": AnthropicModel("claude-2", 100000),
+    # "Llama 2": HuggingFaceLlama2Model("meta-llama/Llama-2-70b-chat-hf", 4096),
+    "Bedrock": Bedrock('Claude', 300)
 }
 
 # Load configuration from config.yaml.
@@ -27,8 +28,8 @@ with open("config.yaml", "r") as config_file:
     config = yaml.safe_load(config_file)
 
 verbose = config["verbose"]
-description = config["description"]
-examples = config["examples"]
+# description = config["description"]
+# examples = config["examples"]
 enabled_models = config["enabled_models"]
 selected_model = enabled_models[0]
 enabled_browsers = config["enabled_browsers"]
@@ -196,8 +197,8 @@ multiple_models_enabled = len(enabled_models) > 1
 multiple_browsers_enabled = len(enabled_browsers) > 1
 
 with gr.Blocks(css=CSS) as app:
-    gr.Markdown(description)
-    chatinterface = gr.ChatInterface(fn=generate, examples=examples)
+    # gr.Markdown(description)
+    chatinterface = gr.ChatInterface(fn=generate, examples=[])
     chatinterface.chatbot.elem_id = "chatbot"
 
     with gr.Accordion(label="Options", open=multiple_models_enabled):
